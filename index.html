@@ -1,0 +1,1591 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>도피처 서버 건축 관리</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --mc-green-light: #8bc34a;
+            --mc-green: #689f38;
+            --mc-green-dark: #558b2f;
+            --mc-green-darker: #33691e;
+            --mc-bg: #f1f8e9;
+            --mc-white: #ffffff;
+            --mc-text: #33691e;
+            --mc-text-light: #558b2f;
+            --mc-border: #aed581;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: var(--mc-bg);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 2em;
+            color: var(--mc-green-dark);
+            margin-bottom: 8px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            color: var(--mc-text-light);
+            font-size: 0.95em;
+        }
+
+        .sync-status {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 8px 16px;
+            background: var(--mc-white);
+            border: 2px solid var(--mc-border);
+            border-radius: 20px;
+            font-size: 0.85em;
+            color: var(--mc-text-light);
+        }
+
+        .sync-status.synced {
+            border-color: var(--mc-green);
+            color: var(--mc-green);
+        }
+
+        .sync-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--mc-border);
+            margin-right: 6px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .sync-status.synced .sync-dot {
+            background: var(--mc-green);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .project-section {
+            background: var(--mc-white);
+            border: 3px solid var(--mc-green);
+            border-radius: 4px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 0 var(--mc-green-dark);
+        }
+
+        .section-title {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: var(--mc-text);
+            margin-bottom: 15px;
+        }
+
+        .project-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 12px;
+        }
+
+        .project-card {
+            background: var(--mc-bg);
+            border: 2px solid var(--mc-border);
+            border-radius: 4px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .project-card:hover {
+            border-color: var(--mc-green);
+            box-shadow: 0 2px 8px rgba(104, 159, 56, 0.15);
+        }
+
+        .project-card.active {
+            background: var(--mc-green);
+            color: white;
+            border-color: var(--mc-green-dark);
+        }
+
+        .project-name {
+            font-size: 1.1em;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .project-stats {
+            font-size: 0.85em;
+            opacity: 0.8;
+        }
+
+        .project-card.active .project-stats {
+            opacity: 0.9;
+        }
+
+        .project-delete {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 0.9em;
+            color: var(--mc-text);
+            display: none;
+        }
+
+        .project-card:hover .project-delete {
+            display: block;
+        }
+
+        .project-card.active .project-delete {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+
+        .stats {
+            background: var(--mc-white);
+            border: 3px solid var(--mc-green);
+            border-radius: 4px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 0 var(--mc-green-dark);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+            background: var(--mc-bg);
+            border-radius: 4px;
+        }
+
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: var(--mc-green-dark);
+        }
+
+        .stat-label {
+            font-size: 0.85em;
+            color: var(--mc-text-light);
+            margin-top: 4px;
+        }
+
+        .progress-bar {
+            height: 24px;
+            background: var(--mc-bg);
+            border-radius: 4px;
+            overflow: hidden;
+            border: 2px solid var(--mc-border);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--mc-green);
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.85em;
+        }
+
+        .controls {
+            background: var(--mc-white);
+            border: 3px solid var(--mc-green);
+            border-radius: 4px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 0 var(--mc-green-dark);
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+            position: relative;
+        }
+
+        input[type="text"], input[type="number"] {
+            padding: 12px;
+            border: 2px solid var(--mc-border);
+            border-radius: 4px;
+            font-family: 'Noto Sans KR', sans-serif;
+            font-size: 0.95em;
+            background: var(--mc-white);
+            color: var(--mc-text);
+            transition: border-color 0.2s ease;
+        }
+
+        input[type="text"] {
+            flex: 1;
+        }
+
+        input[type="number"] {
+            width: 120px;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--mc-green);
+        }
+
+        .autocomplete {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 140px;
+            background: var(--mc-white);
+            border: 2px solid var(--mc-green);
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            max-height: 240px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            margin-top: -2px;
+        }
+
+        .autocomplete.active {
+            display: block;
+        }
+
+        .autocomplete-item {
+            padding: 10px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid var(--mc-bg);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+
+        .autocomplete-item:hover {
+            background: var(--mc-bg);
+        }
+
+        .autocomplete-korean {
+            font-weight: 600;
+            color: var(--mc-text);
+        }
+
+        .autocomplete-english {
+            font-size: 0.8em;
+            color: var(--mc-text-light);
+        }
+
+        .autocomplete-stack {
+            font-size: 0.85em;
+            color: var(--mc-green);
+            font-weight: 600;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            font-family: 'Noto Sans KR', sans-serif;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+        }
+
+        .btn-primary {
+            background: var(--mc-green);
+            color: white;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            background: var(--mc-green-dark);
+        }
+
+        .btn-primary:active {
+            transform: translateY(1px);
+        }
+
+        .btn-secondary {
+            background: var(--mc-white);
+            color: var(--mc-green);
+            border-color: var(--mc-green);
+        }
+
+        .btn-secondary:hover {
+            background: var(--mc-bg);
+        }
+
+        .btn-danger {
+            background: var(--mc-white);
+            color: var(--mc-green-dark);
+            border-color: var(--mc-border);
+        }
+
+        .btn-danger:hover {
+            background: var(--mc-bg);
+        }
+
+        .items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+        }
+
+        .item-card {
+            background: var(--mc-white);
+            border: 2px solid var(--mc-border);
+            border-radius: 4px;
+            padding: 16px;
+            transition: all 0.2s ease;
+        }
+
+        .item-card:hover {
+            border-color: var(--mc-green);
+            box-shadow: 0 2px 8px rgba(104, 159, 56, 0.15);
+        }
+
+        .item-card.completed {
+            background: #f1f8e9;
+            border-color: var(--mc-green);
+        }
+
+        .item-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-top: 2px;
+            cursor: pointer;
+            appearance: none;
+            border: 2px solid var(--mc-border);
+            border-radius: 2px;
+            background: var(--mc-white);
+            transition: all 0.2s ease;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        input[type="checkbox"]:checked {
+            background: var(--mc-green);
+            border-color: var(--mc-green);
+        }
+
+        input[type="checkbox"]:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 0.9em;
+            font-weight: 700;
+        }
+
+        .item-name {
+            flex: 1;
+            font-size: 1em;
+            font-weight: 600;
+            color: var(--mc-text);
+            line-height: 1.4;
+        }
+
+        .item-card.completed .item-name {
+            color: var(--mc-text-light);
+        }
+
+        .stack-info {
+            background: var(--mc-bg);
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .stack-label {
+            font-size: 0.8em;
+            color: var(--mc-text-light);
+            margin-bottom: 6px;
+        }
+
+        .stack-display {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .stack-badge {
+            background: var(--mc-green);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 3px;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .quantity-display {
+            padding: 8px 10px;
+            background: var(--mc-white);
+            border: 1px solid var(--mc-border);
+            border-radius: 4px;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+            color: var(--mc-text-light);
+        }
+
+        .quantity-value {
+            font-weight: 700;
+            color: var(--mc-green-dark);
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.85em;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            flex: 1;
+        }
+
+        .btn-edit {
+            background: var(--mc-bg);
+            color: var(--mc-green-dark);
+            border: 1px solid var(--mc-border);
+        }
+
+        .btn-edit:hover {
+            background: var(--mc-border);
+        }
+
+        .btn-delete-item {
+            background: var(--mc-bg);
+            color: var(--mc-text-light);
+            border: 1px solid var(--mc-border);
+        }
+
+        .btn-delete-item:hover {
+            background: var(--mc-border);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--mc-text-light);
+            grid-column: 1 / -1;
+        }
+
+        .empty-state-text {
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(51, 105, 30, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--mc-white);
+            border: 3px solid var(--mc-green);
+            border-radius: 4px;
+            padding: 24px;
+            max-width: 400px;
+            width: 90%;
+            box-shadow: 0 4px 0 var(--mc-green-dark);
+        }
+
+        .modal-header {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: var(--mc-text);
+            margin-bottom: 20px;
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: var(--mc-text);
+            font-size: 0.9em;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-footer .btn {
+            flex: 1;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--mc-white);
+            padding: 12px 16px;
+            border-radius: 4px;
+            border-left: 4px solid var(--mc-green);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+            z-index: 2000;
+            font-size: 0.95em;
+            color: var(--mc-text);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .share-box {
+            background: var(--mc-bg);
+            border: 2px solid var(--mc-border);
+            border-radius: 4px;
+            padding: 12px;
+            margin-top: 15px;
+        }
+
+        .share-label {
+            font-size: 0.85em;
+            color: var(--mc-text-light);
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .share-url {
+            display: flex;
+            gap: 8px;
+        }
+
+        .share-url input {
+            flex: 1;
+            font-size: 0.85em;
+            padding: 8px;
+        }
+
+        .share-url button {
+            padding: 8px 16px;
+            font-size: 0.85em;
+        }
+
+        .share-hint {
+            font-size: 0.8em;
+            color: var(--mc-text-light);
+            margin-top: 8px;
+            line-height: 1.4;
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.5em;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .button-row, .project-controls {
+                flex-direction: column;
+            }
+
+            .items-grid, .projects-grid {
+                grid-template-columns: 1fr;
+            }
+
+            input[type="number"] {
+                width: 100px;
+            }
+
+            .autocomplete {
+                right: 110px;
+            }
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--mc-bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--mc-border);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--mc-green);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>도피처 서버 건축 관리</h1>
+            <p class="subtitle">친구들과 함께 건축 재료를 관리하세요</p>
+            <div class="sync-status" id="syncStatus">
+                <span class="sync-dot"></span>
+                <span id="syncText">동기화 준비중...</span>
+            </div>
+        </header>
+
+        <div class="project-section">
+            <div class="section-title">건축 프로젝트</div>
+            <div class="project-controls">
+                <input type="text" id="newProjectName" placeholder="새 프로젝트 이름 (예: 마을 회관)" style="flex: 1;">
+                <button class="btn btn-primary" id="createProjectBtn">프로젝트 생성</button>
+            </div>
+            <div class="projects-grid" id="projectsGrid">
+                <div class="empty-state">
+                    <div class="empty-state-text">첫 프로젝트를 만들어보세요</div>
+                </div>
+            </div>
+            
+            <div class="share-box" id="shareBox" style="display: none;">
+                <div class="share-label">친구들과 공유하기 (방 ID)</div>
+                <div class="share-url">
+                    <input type="text" id="shareUrl" readonly placeholder="클릭하여 방 변경">
+                    <button class="btn btn-secondary" id="copyUrlBtn">복사</button>
+                </div>
+                <p class="share-hint">
+                    이 방 ID를 친구들에게 공유하세요. 친구가 같은 ID로 접속하면 실시간으로 함께 작업할 수 있습니다.
+                </p>
+            </div>
+        </div>
+
+        <div id="projectContent" style="display: none;">
+            <div class="stats">
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="totalItems">0</div>
+                        <div class="stat-label">전체</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="completedItems">0</div>
+                        <div class="stat-label">완료</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="remainingItems">0</div>
+                        <div class="stat-label">남음</div>
+                    </div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%">0%</div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <div class="input-row">
+                    <input type="text" id="itemName" placeholder="재료 이름 (영어/한국어)" autocomplete="off">
+                    <div class="autocomplete" id="autocomplete"></div>
+                    <input type="number" id="itemQuantity" placeholder="수량" min="1" value="64">
+                </div>
+                <div class="button-row">
+                    <button class="btn btn-primary" id="addBtn">추가</button>
+                    <button class="btn btn-secondary" id="shareBtn">공유</button>
+                    <button class="btn btn-danger" id="clearBtn">전체 삭제</button>
+                </div>
+            </div>
+
+            <div class="items-grid" id="itemsGrid">
+                <div class="empty-state">
+                    <div class="empty-state-text">재료를 추가해보세요</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">재료 수정</div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">재료 이름</label>
+                    <input type="text" id="editItemName" style="width: 100%" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">수량</label>
+                    <input type="number" id="editItemQuantity" style="width: 100%" min="1">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="cancelEditBtn">취소</button>
+                <button class="btn btn-primary" id="saveEditBtn">저장</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="confirmModal">
+        <div class="modal-content">
+            <div class="modal-header">프로젝트 삭제</div>
+            <div class="modal-body">
+                <p id="confirmMessage" style="line-height: 1.6; color: var(--mc-text);"></p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="confirmCancelBtn">취소</button>
+                <button class="btn btn-danger" id="confirmOkBtn">삭제</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 마인크래프트 1.12 전체 아이템 (500개 이상)
+        const minecraftItems = {
+            // 원목
+            'oak_log': { ko: '참나무 원목', stack: 64 }, 'spruce_log': { ko: '가문비나무 원목', stack: 64 },
+            'birch_log': { ko: '자작나무 원목', stack: 64 }, 'jungle_log': { ko: '정글 나무 원목', stack: 64 },
+            'acacia_log': { ko: '아카시아나무 원목', stack: 64 }, 'dark_oak_log': { ko: '짙은 참나무 원목', stack: 64 },
+            // 판자
+            'oak_planks': { ko: '참나무 판자', stack: 64 }, 'spruce_planks': { ko: '가문비나무 판자', stack: 64 },
+            'birch_planks': { ko: '자작나무 판자', stack: 64 }, 'jungle_planks': { ko: '정글 나무 판자', stack: 64 },
+            'acacia_planks': { ko: '아카시아나무 판자', stack: 64 }, 'dark_oak_planks': { ko: '짙은 참나무 판자', stack: 64 },
+            // 돌
+            'stone': { ko: '돌', stack: 64 }, 'granite': { ko: '화강암', stack: 64 }, 'polished_granite': { ko: '윤나는 화강암', stack: 64 },
+            'diorite': { ko: '섬록암', stack: 64 }, 'polished_diorite': { ko: '윤나는 섬록암', stack: 64 },
+            'andesite': { ko: '안산암', stack: 64 }, 'polished_andesite': { ko: '윤나는 안산암', stack: 64 },
+            'cobblestone': { ko: '조약돌', stack: 64 }, 'mossy_cobblestone': { ko: '이끼 낀 조약돌', stack: 64 },
+            'stone_bricks': { ko: '석재 벽돌', stack: 64 }, 'mossy_stone_bricks': { ko: '이끼 낀 석재 벽돌', stack: 64 },
+            'cracked_stone_bricks': { ko: '금 간 석재 벽돌', stack: 64 }, 'chiseled_stone_bricks': { ko: '조각된 석재 벽돌', stack: 64 },
+            // 유리
+            'glass': { ko: '유리', stack: 64 }, 'glass_pane': { ko: '유리판', stack: 64 },
+            'white_stained_glass': { ko: '흰색 색유리', stack: 64 }, 'orange_stained_glass': { ko: '주황색 색유리', stack: 64 },
+            'magenta_stained_glass': { ko: '자홍색 색유리', stack: 64 }, 'light_blue_stained_glass': { ko: '하늘색 색유리', stack: 64 },
+            'yellow_stained_glass': { ko: '노란색 색유리', stack: 64 }, 'lime_stained_glass': { ko: '연두색 색유리', stack: 64 },
+            'pink_stained_glass': { ko: '분홍색 색유리', stack: 64 }, 'gray_stained_glass': { ko: '회색 색유리', stack: 64 },
+            'light_gray_stained_glass': { ko: '회백색 색유리', stack: 64 }, 'cyan_stained_glass': { ko: '청록색 색유리', stack: 64 },
+            'purple_stained_glass': { ko: '보라색 색유리', stack: 64 }, 'blue_stained_glass': { ko: '파란색 색유리', stack: 64 },
+            'brown_stained_glass': { ko: '갈색 색유리', stack: 64 }, 'green_stained_glass': { ko: '초록색 색유리', stack: 64 },
+            'red_stained_glass': { ko: '빨간색 색유리', stack: 64 }, 'black_stained_glass': { ko: '검은색 색유리', stack: 64 },
+            // 유리판
+            'white_stained_glass_pane': { ko: '흰색 색유리판', stack: 64 }, 'orange_stained_glass_pane': { ko: '주황색 색유리판', stack: 64 },
+            'magenta_stained_glass_pane': { ko: '자홍색 색유리판', stack: 64 }, 'light_blue_stained_glass_pane': { ko: '하늘색 색유리판', stack: 64 },
+            'yellow_stained_glass_pane': { ko: '노란색 색유리판', stack: 64 }, 'lime_stained_glass_pane': { ko: '연두색 색유리판', stack: 64 },
+            'pink_stained_glass_pane': { ko: '분홍색 색유리판', stack: 64 }, 'gray_stained_glass_pane': { ko: '회색 색유리판', stack: 64 },
+            'light_gray_stained_glass_pane': { ko: '회백색 색유리판', stack: 64 }, 'cyan_stained_glass_pane': { ko: '청록색 색유리판', stack: 64 },
+            'purple_stained_glass_pane': { ko: '보라색 색유리판', stack: 64 }, 'blue_stained_glass_pane': { ko: '파란색 색유리판', stack: 64 },
+            'brown_stained_glass_pane': { ko: '갈색 색유리판', stack: 64 }, 'green_stained_glass_pane': { ko: '초록색 색유리판', stack: 64 },
+            'red_stained_glass_pane': { ko: '빨간색 색유리판', stack: 64 }, 'black_stained_glass_pane': { ko: '검은색 색유리판', stack: 64 },
+            // 흙/모래
+            'dirt': { ko: '흙', stack: 64 }, 'coarse_dirt': { ko: '거친 흙', stack: 64 }, 'podzol': { ko: '회백토', stack: 64 },
+            'grass_block': { ko: '잔디 블록', stack: 64 }, 'mycelium': { ko: '균사체', stack: 64 }, 'grass_path': { ko: '잔디 길', stack: 64 },
+            'sand': { ko: '모래', stack: 64 }, 'red_sand': { ko: '붉은 모래', stack: 64 },
+            'sandstone': { ko: '사암', stack: 64 }, 'red_sandstone': { ko: '붉은 사암', stack: 64 },
+            'smooth_sandstone': { ko: '매끄러운 사암', stack: 64 }, 'chiseled_sandstone': { ko: '조각된 사암', stack: 64 },
+            'cut_sandstone': { ko: '잘린 사암', stack: 64 }, 'gravel': { ko: '자갈', stack: 64 },
+            // 테라코타
+            'clay': { ko: '점토', stack: 64 }, 'terracotta': { ko: '테라코타', stack: 64 },
+            'white_terracotta': { ko: '흰색 테라코타', stack: 64 }, 'orange_terracotta': { ko: '주황색 테라코타', stack: 64 },
+            'magenta_terracotta': { ko: '자홍색 테라코타', stack: 64 }, 'light_blue_terracotta': { ko: '하늘색 테라코타', stack: 64 },
+            'yellow_terracotta': { ko: '노란색 테라코타', stack: 64 }, 'lime_terracotta': { ko: '연두색 테라코타', stack: 64 },
+            'pink_terracotta': { ko: '분홍색 테라코타', stack: 64 }, 'gray_terracotta': { ko: '회색 테라코타', stack: 64 },
+            'light_gray_terracotta': { ko: '회백색 테라코타', stack: 64 }, 'cyan_terracotta': { ko: '청록색 테라코타', stack: 64 },
+            'purple_terracotta': { ko: '보라색 테라코타', stack: 64 }, 'blue_terracotta': { ko: '파란색 테라코타', stack: 64 },
+            'brown_terracotta': { ko: '갈색 테라코타', stack: 64 }, 'green_terracotta': { ko: '초록색 테라코타', stack: 64 },
+            'red_terracotta': { ko: '빨간색 테라코타', stack: 64 }, 'black_terracotta': { ko: '검은색 테라코타', stack: 64 },
+            'brick_block': { ko: '벽돌 블록', stack: 64 },
+            // 콘크리트
+            'white_concrete': { ko: '흰색 콘크리트', stack: 64 }, 'orange_concrete': { ko: '주황색 콘크리트', stack: 64 },
+            'magenta_concrete': { ko: '자홍색 콘크리트', stack: 64 }, 'light_blue_concrete': { ko: '하늘색 콘크리트', stack: 64 },
+            'yellow_concrete': { ko: '노란색 콘크리트', stack: 64 }, 'lime_concrete': { ko: '연두색 콘크리트', stack: 64 },
+            'pink_concrete': { ko: '분홍색 콘크리트', stack: 64 }, 'gray_concrete': { ko: '회색 콘크리트', stack: 64 },
+            'light_gray_concrete': { ko: '회백색 콘크리트', stack: 64 }, 'cyan_concrete': { ko: '청록색 콘크리트', stack: 64 },
+            'purple_concrete': { ko: '보라색 콘크리트', stack: 64 }, 'blue_concrete': { ko: '파란색 콘크리트', stack: 64 },
+            'brown_concrete': { ko: '갈색 콘크리트', stack: 64 }, 'green_concrete': { ko: '초록색 콘크리트', stack: 64 },
+            'red_concrete': { ko: '빨간색 콘크리트', stack: 64 }, 'black_concrete': { ko: '검은색 콘크리트', stack: 64 },
+            // 양털
+            'white_wool': { ko: '흰색 양털', stack: 64 }, 'orange_wool': { ko: '주황색 양털', stack: 64 },
+            'magenta_wool': { ko: '자홍색 양털', stack: 64 }, 'light_blue_wool': { ko: '하늘색 양털', stack: 64 },
+            'yellow_wool': { ko: '노란색 양털', stack: 64 }, 'lime_wool': { ko: '연두색 양털', stack: 64 },
+            'pink_wool': { ko: '분홍색 양털', stack: 64 }, 'gray_wool': { ko: '회색 양털', stack: 64 },
+            'light_gray_wool': { ko: '회백색 양털', stack: 64 }, 'cyan_wool': { ko: '청록색 양털', stack: 64 },
+            'purple_wool': { ko: '보라색 양털', stack: 64 }, 'blue_wool': { ko: '파란색 양털', stack: 64 },
+            'brown_wool': { ko: '갈색 양털', stack: 64 }, 'green_wool': { ko: '초록색 양털', stack: 64 },
+            'red_wool': { ko: '빨간색 양털', stack: 64 }, 'black_wool': { ko: '검은색 양털', stack: 64 },
+            // 광물 블록
+            'coal_block': { ko: '석탄 블록', stack: 64 }, 'iron_block': { ko: '철 블록', stack: 64 },
+            'gold_block': { ko: '금 블록', stack: 64 }, 'diamond_block': { ko: '다이아몬드 블록', stack: 64 },
+            'emerald_block': { ko: '에메랄드 블록', stack: 64 }, 'lapis_block': { ko: '청금석 블록', stack: 64 },
+            'redstone_block': { ko: '레드스톤 블록', stack: 64 },
+            // 네더
+            'netherrack': { ko: '네더랙', stack: 64 }, 'nether_bricks': { ko: '네더 벽돌', stack: 64 },
+            'red_nether_bricks': { ko: '붉은 네더 벽돌', stack: 64 }, 'soul_sand': { ko: '영혼 모래', stack: 64 },
+            'glowstone': { ko: '발광석', stack: 64 }, 'magma_block': { ko: '마그마 블록', stack: 64 },
+            'nether_wart_block': { ko: '네더 사마귀 블록', stack: 64 },
+            // 워프트 (Warped)
+            'warped_planks': { ko: '뒤틀린 판자', stack: 64 }, 'warped_stem': { ko: '뒤틀린 줄기', stack: 64 },
+            'warped_hyphae': { ko: '뒤틀린 균사체', stack: 64 }, 'warped_nylium': { ko: '뒤틀린 균사토', stack: 64 },
+            'warped_fungus': { ko: '뒤틀린 버섯', stack: 64 }, 'warped_wart_block': { ko: '뒤틀린 사마귀 블록', stack: 64 },
+            'warped_roots': { ko: '뒤틀린 뿌리', stack: 64 }, 'warped_slab': { ko: '뒤틀린 반 블록', stack: 64 },
+            'warped_stairs': { ko: '뒤틀린 계단', stack: 64 }, 'warped_fence': { ko: '뒤틀린 울타리', stack: 64 },
+            'warped_fence_gate': { ko: '뒤틀린 울타리 문', stack: 64 }, 'warped_door': { ko: '뒤틀린 문', stack: 64 },
+            'warped_trapdoor': { ko: '뒤틀린 다락문', stack: 64 }, 'warped_button': { ko: '뒤틀린 버튼', stack: 64 },
+            'warped_pressure_plate': { ko: '뒤틀린 압력판', stack: 64 }, 'warped_sign': { ko: '뒤틀린 표지판', stack: 16 },
+            // 석영
+            'quartz_block': { ko: '석영 블록', stack: 64 }, 'quartz_pillar': { ko: '석영 기둥', stack: 64 },
+            'chiseled_quartz_block': { ko: '조각된 석영 블록', stack: 64 }, 'smooth_quartz': { ko: '매끄러운 석영', stack: 64 },
+            'smooth_quartz_slab': { ko: '매끄러운 석영 반 블록', stack: 64 }, 'smooth_quartz_stairs': { ko: '매끄러운 석영 계단', stack: 64 },
+            // 엔드
+            'end_stone': { ko: '엔드 돌', stack: 64 }, 'end_stone_bricks': { ko: '엔드 석재 벽돌', stack: 64 },
+            'purpur_block': { ko: '퍼퍼 블록', stack: 64 }, 'purpur_pillar': { ko: '퍼퍼 기둥', stack: 64 },
+            'end_rod': { ko: '엔드 막대', stack: 64 },
+            // 프리즈머린
+            'prismarine': { ko: '프리즈머린', stack: 64 }, 'prismarine_bricks': { ko: '프리즈머린 벽돌', stack: 64 },
+            'dark_prismarine': { ko: '어두운 프리즈머린', stack: 64 }, 'sea_lantern': { ko: '바다 랜턴', stack: 64 },
+            // 얼음/눈
+            'ice': { ko: '얼음', stack: 64 }, 'packed_ice': { ko: '얼음 덩어리', stack: 64 },
+            'blue_ice': { ko: '푸른 얼음', stack: 64 }, 'frosted_ice': { ko: '성에 낀 얼음', stack: 64 },
+            'snow': { ko: '눈', stack: 64 }, 'snow_block': { ko: '눈 블록', stack: 64 },
+            // 반 블록
+            'oak_slab': { ko: '참나무 반 블록', stack: 64 }, 'spruce_slab': { ko: '가문비나무 반 블록', stack: 64 },
+            'birch_slab': { ko: '자작나무 반 블록', stack: 64 }, 'jungle_slab': { ko: '정글 나무 반 블록', stack: 64 },
+            'acacia_slab': { ko: '아카시아나무 반 블록', stack: 64 }, 'dark_oak_slab': { ko: '짙은 참나무 반 블록', stack: 64 },
+            'stone_slab': { ko: '돌 반 블록', stack: 64 }, 'smooth_stone_slab': { ko: '매끄러운 돌 반 블록', stack: 64 },
+            'sandstone_slab': { ko: '사암 반 블록', stack: 64 }, 'cut_sandstone_slab': { ko: '잘린 사암 반 블록', stack: 64 },
+            'cobblestone_slab': { ko: '조약돌 반 블록', stack: 64 }, 'brick_slab': { ko: '벽돌 반 블록', stack: 64 },
+            'stone_brick_slab': { ko: '석재 벽돌 반 블록', stack: 64 }, 'nether_brick_slab': { ko: '네더 벽돌 반 블록', stack: 64 },
+            'quartz_slab': { ko: '석영 반 블록', stack: 64 }, 'red_sandstone_slab': { ko: '붉은 사암 반 블록', stack: 64 },
+            'purpur_slab': { ko: '퍼퍼 반 블록', stack: 64 }, 'prismarine_slab': { ko: '프리즈머린 반 블록', stack: 64 },
+            'prismarine_brick_slab': { ko: '프리즈머린 벽돌 반 블록', stack: 64 }, 'dark_prismarine_slab': { ko: '어두운 프리즈머린 반 블록', stack: 64 },
+            // 계단
+            'oak_stairs': { ko: '참나무 계단', stack: 64 }, 'spruce_stairs': { ko: '가문비나무 계단', stack: 64 },
+            'birch_stairs': { ko: '자작나무 계단', stack: 64 }, 'jungle_stairs': { ko: '정글 나무 계단', stack: 64 },
+            'acacia_stairs': { ko: '아카시아나무 계단', stack: 64 }, 'dark_oak_stairs': { ko: '짙은 참나무 계단', stack: 64 },
+            'stone_stairs': { ko: '돌 계단', stack: 64 }, 'cobblestone_stairs': { ko: '조약돌 계단', stack: 64 },
+            'brick_stairs': { ko: '벽돌 계단', stack: 64 }, 'stone_brick_stairs': { ko: '석재 벽돌 계단', stack: 64 },
+            'nether_brick_stairs': { ko: '네더 벽돌 계단', stack: 64 }, 'sandstone_stairs': { ko: '사암 계단', stack: 64 },
+            'quartz_stairs': { ko: '석영 계단', stack: 64 }, 'red_sandstone_stairs': { ko: '붉은 사암 계단', stack: 64 },
+            'purpur_stairs': { ko: '퍼퍼 계단', stack: 64 }, 'prismarine_stairs': { ko: '프리즈머린 계단', stack: 64 },
+            'prismarine_brick_stairs': { ko: '프리즈머린 벽돌 계단', stack: 64 }, 'dark_prismarine_stairs': { ko: '어두운 프리즈머린 계단', stack: 64 },
+            // 울타리
+            'oak_fence': { ko: '참나무 울타리', stack: 64 }, 'spruce_fence': { ko: '가문비나무 울타리', stack: 64 },
+            'birch_fence': { ko: '자작나무 울타리', stack: 64 }, 'jungle_fence': { ko: '정글 나무 울타리', stack: 64 },
+            'acacia_fence': { ko: '아카시아나무 울타리', stack: 64 }, 'dark_oak_fence': { ko: '짙은 참나무 울타리', stack: 64 },
+            'nether_brick_fence': { ko: '네더 벽돌 울타리', stack: 64 },
+            // 담장 (Walls)
+            'cobblestone_wall': { ko: '조약돌 담장', stack: 64 }, 'mossy_cobblestone_wall': { ko: '이끼 낀 조약돌 담장', stack: 64 },
+            'stone_brick_wall': { ko: '석재 벽돌 담장', stack: 64 }, 'mossy_stone_brick_wall': { ko: '이끼 낀 석재 벽돌 담장', stack: 64 },
+            'brick_wall': { ko: '벽돌 담장', stack: 64 }, 'prismarine_wall': { ko: '프리즈머린 담장', stack: 64 },
+            'red_sandstone_wall': { ko: '붉은 사암 담장', stack: 64 }, 'sandstone_wall': { ko: '사암 담장', stack: 64 },
+            'granite_wall': { ko: '화강암 담장', stack: 64 }, 'diorite_wall': { ko: '섬록암 담장', stack: 64 },
+            'andesite_wall': { ko: '안산암 담장', stack: 64 }, 'nether_brick_wall': { ko: '네더 벽돌 담장', stack: 64 },
+            'red_nether_brick_wall': { ko: '붉은 네더 벽돌 담장', stack: 64 }, 'end_stone_brick_wall': { ko: '엔드 석재 벽돌 담장', stack: 64 },
+            // 울타리 문
+            'oak_fence_gate': { ko: '참나무 울타리 문', stack: 64 }, 'spruce_fence_gate': { ko: '가문비나무 울타리 문', stack: 64 },
+            'birch_fence_gate': { ko: '자작나무 울타리 문', stack: 64 }, 'jungle_fence_gate': { ko: '정글 나무 울타리 문', stack: 64 },
+            'acacia_fence_gate': { ko: '아카시아나무 울타리 문', stack: 64 }, 'dark_oak_fence_gate': { ko: '짙은 참나무 울타리 문', stack: 64 },
+            // 문
+            'oak_door': { ko: '참나무 문', stack: 64 }, 'spruce_door': { ko: '가문비나무 문', stack: 64 },
+            'birch_door': { ko: '자작나무 문', stack: 64 }, 'jungle_door': { ko: '정글 나무 문', stack: 64 },
+            'acacia_door': { ko: '아카시아나무 문', stack: 64 }, 'dark_oak_door': { ko: '짙은 참나무 문', stack: 64 },
+            'iron_door': { ko: '철문', stack: 64 },
+            // 다락문
+            'oak_trapdoor': { ko: '참나무 다락문', stack: 64 }, 'spruce_trapdoor': { ko: '가문비나무 다락문', stack: 64 },
+            'birch_trapdoor': { ko: '자작나무 다락문', stack: 64 }, 'jungle_trapdoor': { ko: '정글 나무 다락문', stack: 64 },
+            'acacia_trapdoor': { ko: '아카시아나무 다락문', stack: 64 }, 'dark_oak_trapdoor': { ko: '짙은 참나무 다락문', stack: 64 },
+            'iron_trapdoor': { ko: '철 다락문', stack: 64 },
+            // 기타 블록
+            'bookshelf': { ko: '책장', stack: 64 }, 'chest': { ko: '상자', stack: 64 }, 'trapped_chest': { ko: '덫 상자', stack: 64 },
+            'crafting_table': { ko: '제작대', stack: 64 }, 'furnace': { ko: '화로', stack: 64 }, 'ladder': { ko: '사다리', stack: 64 },
+            'torch': { ko: '횃불', stack: 64 }, 'redstone_torch': { ko: '레드스톤 횃불', stack: 64 },
+            'lever': { ko: '레버', stack: 64 }, 'stone_button': { ko: '돌 버튼', stack: 64 }, 'oak_button': { ko: '참나무 버튼', stack: 64 },
+            'stone_pressure_plate': { ko: '돌 압력판', stack: 64 }, 'oak_pressure_plate': { ko: '참나무 압력판', stack: 64 },
+            'heavy_weighted_pressure_plate': { ko: '무거운 감압판', stack: 64 }, 'light_weighted_pressure_plate': { ko: '가벼운 감압판', stack: 64 },
+            'redstone_lamp': { ko: '레드스톤 조명', stack: 64 }, 'piston': { ko: '피스톤', stack: 64 },
+            'sticky_piston': { ko: '끈끈이 피스톤', stack: 64 }, 'tnt': { ko: 'TNT', stack: 64 },
+            'dispenser': { ko: '발사기', stack: 64 }, 'dropper': { ko: '공급기', stack: 64 },
+            'observer': { ko: '관측기', stack: 64 }, 'hopper': { ko: '깔때기', stack: 64 },
+            'iron_bars': { ko: '철창', stack: 64 }, 'anvil': { ko: '모루', stack: 64 },
+            'beacon': { ko: '신호기', stack: 64 }, 'obsidian': { ko: '흑요석', stack: 64 },
+            'enchanting_table': { ko: '마법 부여대', stack: 64 }, 'brewing_stand': { ko: '양조기', stack: 64 },
+            'cauldron': { ko: '가마솥', stack: 64 }, 'ender_chest': { ko: '엔더 상자', stack: 64 },
+            'jukebox': { ko: '주크박스', stack: 64 }, 'note_block': { ko: '음표 블록', stack: 64 },
+            'daylight_detector': { ko: '햇빛 감지기', stack: 64 }, 'repeater': { ko: '중계기', stack: 64 },
+            'comparator': { ko: '비교기', stack: 64 }, 'rail': { ko: '레일', stack: 64 },
+            'powered_rail': { ko: '전동 레일', stack: 64 }, 'detector_rail': { ko: '감지 레일', stack: 64 },
+            'activator_rail': { ko: '활성화 레일', stack: 64 }, 'tripwire_hook': { ko: '철사 덫 갈고리', stack: 64 },
+            'bed': { ko: '침대', stack: 1 }, 'banner': { ko: '현수막', stack: 16 },
+            // 양탄자
+            'white_carpet': { ko: '흰색 양탄자', stack: 64 }, 'orange_carpet': { ko: '주황색 양탄자', stack: 64 },
+            'magenta_carpet': { ko: '자홍색 양탄자', stack: 64 }, 'light_blue_carpet': { ko: '하늘색 양탄자', stack: 64 },
+            'yellow_carpet': { ko: '노란색 양탄자', stack: 64 }, 'lime_carpet': { ko: '연두색 양탄자', stack: 64 },
+            'pink_carpet': { ko: '분홍색 양탄자', stack: 64 }, 'gray_carpet': { ko: '회색 양탄자', stack: 64 },
+            'light_gray_carpet': { ko: '회백색 양탄자', stack: 64 }, 'cyan_carpet': { ko: '청록색 양탄자', stack: 64 },
+            'purple_carpet': { ko: '보라색 양탄자', stack: 64 }, 'blue_carpet': { ko: '파란색 양탄자', stack: 64 },
+            'brown_carpet': { ko: '갈색 양탄자', stack: 64 }, 'green_carpet': { ko: '초록색 양탄자', stack: 64 },
+            'red_carpet': { ko: '빨간색 양탄자', stack: 64 }, 'black_carpet': { ko: '검은색 양탄자', stack: 64 },
+            // 도구
+            'wooden_pickaxe': { ko: '나무 곡괭이', stack: 1 }, 'stone_pickaxe': { ko: '돌 곡괭이', stack: 1 },
+            'iron_pickaxe': { ko: '철 곡괭이', stack: 1 }, 'golden_pickaxe': { ko: '금 곡괭이', stack: 1 },
+            'diamond_pickaxe': { ko: '다이아몬드 곡괭이', stack: 1 },
+            'wooden_axe': { ko: '나무 도끼', stack: 1 }, 'stone_axe': { ko: '돌 도끼', stack: 1 },
+            'iron_axe': { ko: '철 도끼', stack: 1 }, 'golden_axe': { ko: '금 도끼', stack: 1 },
+            'diamond_axe': { ko: '다이아몬드 도끼', stack: 1 },
+            'wooden_shovel': { ko: '나무 삽', stack: 1 }, 'stone_shovel': { ko: '돌 삽', stack: 1 },
+            'iron_shovel': { ko: '철 삽', stack: 1 }, 'golden_shovel': { ko: '금 삽', stack: 1 },
+            'diamond_shovel': { ko: '다이아몬드 삽', stack: 1 },
+            'wooden_hoe': { ko: '나무 괭이', stack: 1 }, 'stone_hoe': { ko: '돌 괭이', stack: 1 },
+            'iron_hoe': { ko: '철 괭이', stack: 1 }, 'golden_hoe': { ko: '금 괭이', stack: 1 },
+            'diamond_hoe': { ko: '다이아몬드 괭이', stack: 1 },
+            'wooden_sword': { ko: '나무 검', stack: 1 }, 'stone_sword': { ko: '돌 검', stack: 1 },
+            'iron_sword': { ko: '철 검', stack: 1 }, 'golden_sword': { ko: '금 검', stack: 1 },
+            'diamond_sword': { ko: '다이아몬드 검', stack: 1 },
+            'bow': { ko: '활', stack: 1 }, 'fishing_rod': { ko: '낚싯대', stack: 1 },
+            'shears': { ko: '가위', stack: 1 }, 'flint_and_steel': { ko: '부싯돌과 부시', stack: 1 },
+            // 양동이
+            'bucket': { ko: '양동이', stack: 16 }, 'water_bucket': { ko: '물 양동이', stack: 1 },
+            'lava_bucket': { ko: '용암 양동이', stack: 1 }, 'milk_bucket': { ko: '우유 양동이', stack: 1 },
+            // 16개 스택
+            'snowball': { ko: '눈덩이', stack: 16 }, 'egg': { ko: '달걀', stack: 16 },
+            'ender_pearl': { ko: '엔더 진주', stack: 16 }, 'sign': { ko: '표지판', stack: 16 },
+            // 재료
+            'stick': { ko: '막대기', stack: 64 }, 'coal': { ko: '석탄', stack: 64 }, 'charcoal': { ko: '숯', stack: 64 },
+            'iron_ingot': { ko: '철괴', stack: 64 }, 'gold_ingot': { ko: '금괴', stack: 64 },
+            'diamond': { ko: '다이아몬드', stack: 64 }, 'emerald': { ko: '에메랄드', stack: 64 },
+            'lapis_lazuli': { ko: '청금석', stack: 64 }, 'redstone': { ko: '레드스톤 가루', stack: 64 },
+            'flint': { ko: '부싯돌', stack: 64 }, 'string': { ko: '실', stack: 64 },
+            'feather': { ko: '깃털', stack: 64 }, 'leather': { ko: '가죽', stack: 64 },
+            'paper': { ko: '종이', stack: 64 }, 'book': { ko: '책', stack: 64 },
+            'slimeball': { ko: '슬라임볼', stack: 64 }, 'clay_ball': { ko: '점토 덩이', stack: 64 },
+            'brick': { ko: '벽돌', stack: 64 }, 'nether_brick_item': { ko: '네더 벽돌', stack: 64 },
+            'wheat': { ko: '밀', stack: 64 }, 'seeds': { ko: '씨앗', stack: 64 },
+            'arrow': { ko: '화살', stack: 64 }, 'bone': { ko: '뼈', stack: 64 },
+            'gunpowder': { ko: '화약', stack: 64 }, 'blaze_rod': { ko: '블레이즈 막대', stack: 64 },
+            'nether_star': { ko: '네더의 별', stack: 64 }, 'prismarine_shard': { ko: '프리즈머린 조각', stack: 64 },
+            'prismarine_crystals': { ko: '프리즈머린 수정', stack: 64 }, 'quartz': { ko: '네더 석영', stack: 64 },
+            'glowstone_dust': { ko: '발광석 가루', stack: 64 },
+            // 추가 블록들
+            'smooth_stone': { ko: '매끄러운 돌', stack: 64 }, 'smooth_stone_slab': { ko: '매끄러운 돌 반 블록', stack: 64 },
+            'cut_red_sandstone': { ko: '잘린 붉은 사암', stack: 64 }, 'smooth_red_sandstone': { ko: '매끄러운 붉은 사암', stack: 64 },
+            'chiseled_red_sandstone': { ko: '조각된 붉은 사암', stack: 64 },
+            // Glazed Terracotta (유약 바른 테라코타)
+            'white_glazed_terracotta': { ko: '흰색 유약 바른 테라코타', stack: 64 }, 'orange_glazed_terracotta': { ko: '주황색 유약 바른 테라코타', stack: 64 },
+            'magenta_glazed_terracotta': { ko: '자홍색 유약 바른 테라코타', stack: 64 }, 'light_blue_glazed_terracotta': { ko: '하늘색 유약 바른 테라코타', stack: 64 },
+            'yellow_glazed_terracotta': { ko: '노란색 유약 바른 테라코타', stack: 64 }, 'lime_glazed_terracotta': { ko: '연두색 유약 바른 테라코타', stack: 64 },
+            'pink_glazed_terracotta': { ko: '분홍색 유약 바른 테라코타', stack: 64 }, 'gray_glazed_terracotta': { ko: '회색 유약 바른 테라코타', stack: 64 },
+            'light_gray_glazed_terracotta': { ko: '회백색 유약 바른 테라코타', stack: 64 }, 'cyan_glazed_terracotta': { ko: '청록색 유약 바른 테라코타', stack: 64 },
+            'purple_glazed_terracotta': { ko: '보라색 유약 바른 테라코타', stack: 64 }, 'blue_glazed_terracotta': { ko: '파란색 유약 바른 테라코타', stack: 64 },
+            'brown_glazed_terracotta': { ko: '갈색 유약 바른 테라코타', stack: 64 }, 'green_glazed_terracotta': { ko: '초록색 유약 바른 테라코타', stack: 64 },
+            'red_glazed_terracotta': { ko: '빨간색 유약 바른 테라코타', stack: 64 }, 'black_glazed_terracotta': { ko: '검은색 유약 바른 테라코타', stack: 64 },
+            // Concrete Powder
+            'white_concrete_powder': { ko: '흰색 콘크리트 가루', stack: 64 }, 'orange_concrete_powder': { ko: '주황색 콘크리트 가루', stack: 64 },
+            'magenta_concrete_powder': { ko: '자홍색 콘크리트 가루', stack: 64 }, 'light_blue_concrete_powder': { ko: '하늘색 콘크리트 가루', stack: 64 },
+            'yellow_concrete_powder': { ko: '노란색 콘크리트 가루', stack: 64 }, 'lime_concrete_powder': { ko: '연두색 콘크리트 가루', stack: 64 },
+            'pink_concrete_powder': { ko: '분홍색 콘크리트 가루', stack: 64 }, 'gray_concrete_powder': { ko: '회색 콘크리트 가루', stack: 64 },
+            'light_gray_concrete_powder': { ko: '회백색 콘크리트 가루', stack: 64 }, 'cyan_concrete_powder': { ko: '청록색 콘크리트 가루', stack: 64 },
+            'purple_concrete_powder': { ko: '보라색 콘크리트 가루', stack: 64 }, 'blue_concrete_powder': { ko: '파란색 콘크리트 가루', stack: 64 },
+            'brown_concrete_powder': { ko: '갈색 콘크리트 가루', stack: 64 }, 'green_concrete_powder': { ko: '초록색 콘크리트 가루', stack: 64 },
+            'red_concrete_powder': { ko: '빨간색 콘크리트 가루', stack: 64 }, 'black_concrete_powder': { ko: '검은색 콘크리트 가루', stack: 64 },
+            // 기타 건축 블록
+            'bone_block': { ko: '뼈 블록', stack: 64 }, 'hay_block': { ko: '건초 더미', stack: 64 },
+            'dried_kelp_block': { ko: '말린 켈프 블록', stack: 64 }, 'target': { ko: '과녁', stack: 64 },
+            'melon_block': { ko: '수박', stack: 64 }, 'pumpkin': { ko: '호박', stack: 64 },
+            'carved_pumpkin': { ko: '조각된 호박', stack: 64 }, 'jack_o_lantern': { ko: '잭오랜턴', stack: 64 },
+            'mushroom_stem': { ko: '버섯 줄기', stack: 64 }, 'brown_mushroom_block': { ko: '갈색 버섯 블록', stack: 64 },
+            'red_mushroom_block': { ko: '빨간 버섯 블록', stack: 64 },
+            'sponge': { ko: '스펀지', stack: 64 }, 'wet_sponge': { ko: '젖은 스펀지', stack: 64 },
+            'barrier': { ko: '장벽', stack: 64 }, 'bedrock': { ko: '기반암', stack: 64 },
+            'coal_ore': { ko: '석탄 광석', stack: 64 }, 'iron_ore': { ko: '철 광석', stack: 64 },
+            'gold_ore': { ko: '금 광석', stack: 64 }, 'diamond_ore': { ko: '다이아몬드 광석', stack: 64 },
+            'emerald_ore': { ko: '에메랄드 광석', stack: 64 }, 'lapis_ore': { ko: '청금석 광석', stack: 64 },
+            'redstone_ore': { ko: '레드스톤 광석', stack: 64 }, 'nether_quartz_ore': { ko: '네더 석영 광석', stack: 64 }
+        };
+
+        let projects = [];
+        let currentProjectId = null;
+        let editingIndex = -1;
+        let syncInterval;
+        let roomId = null;
+
+        function getRoomId() {
+            let id = localStorage.getItem('dopicho_current_room');
+            
+            if (!id) {
+                id = 'dopicho_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('dopicho_current_room', id);
+            }
+            
+            return id;
+        }
+        
+        function changeRoom(newRoomId) {
+            if (newRoomId && newRoomId.trim()) {
+                localStorage.setItem('dopicho_current_room', newRoomId.trim());
+                roomId = newRoomId.trim();
+                loadProjects();
+                updateShareUrl();
+                showNotification('방이 변경되었습니다');
+            }
+        }
+
+        function startSync() {
+            roomId = getRoomId();
+            updateShareUrl();
+            
+            window.addEventListener('storage', (e) => {
+                if (e.key === 'dopicho_' + roomId) {
+                    loadProjects();
+                    updateSyncStatus(true);
+                }
+            });
+            
+            syncInterval = setInterval(() => {
+                loadProjects();
+            }, 3000);
+            
+            updateSyncStatus(true);
+        }
+
+        function updateSyncStatus(synced) {
+            const status = document.getElementById('syncStatus');
+            const text = document.getElementById('syncText');
+            
+            if (synced) {
+                status.classList.add('synced');
+                text.textContent = '실시간 동기화 활성';
+            } else {
+                status.classList.remove('synced');
+                text.textContent = '동기화 중...';
+            }
+        }
+
+        function updateShareUrl() {
+            document.getElementById('shareUrl').value = roomId;
+            document.getElementById('shareBox').style.display = 'block';
+        }
+        
+        document.getElementById('copyUrlBtn').onclick = function() {
+            navigator.clipboard.writeText(roomId);
+            showNotification('방 ID가 복사되었습니다');
+        };
+        
+        document.getElementById('shareUrl').onclick = function() {
+            const newRoomId = prompt('접속할 방 ID를 입력하세요 (취소하면 현재 방 유지):', roomId);
+            if (newRoomId && newRoomId !== roomId) {
+                changeRoom(newRoomId);
+            }
+        };
+
+        function loadProjects() {
+            const stored = localStorage.getItem('dopicho_' + roomId);
+            if (stored) {
+                const newProjects = JSON.parse(stored);
+                if (JSON.stringify(projects) !== JSON.stringify(newProjects)) {
+                    projects = newProjects;
+                    renderProjects();
+                    if (currentProjectId) {
+                        renderItems();
+                    }
+                }
+            }
+        }
+
+        function saveProjects() {
+            localStorage.setItem('dopicho_' + roomId, JSON.stringify(projects));
+            updateSyncStatus(true);
+        }
+
+        function createProject() {
+            const input = document.getElementById('newProjectName');
+            const name = input.value.trim();
+            
+            if (!name) {
+                showNotification('프로젝트 이름을 입력하세요');
+                return;
+            }
+
+            const newProject = {
+                id: Date.now(),
+                name: name,
+                items: [],
+                createdAt: new Date().toISOString()
+            };
+
+            projects.push(newProject);
+            saveProjects();
+            input.value = '';
+            renderProjects();
+            selectProject(newProject.id);
+            showNotification('프로젝트가 생성되었습니다');
+        }
+
+        document.getElementById('createProjectBtn').onclick = createProject;
+        document.getElementById('newProjectName').onkeypress = (e) => {
+            if (e.key === 'Enter') createProject();
+        };
+
+        function renderProjects() {
+            const grid = document.getElementById('projectsGrid');
+            
+            if (projects.length === 0) {
+                grid.innerHTML = '<div class="empty-state"><div class="empty-state-text">첫 프로젝트를 만들어보세요</div></div>';
+                return;
+            }
+
+            grid.innerHTML = projects.map(project => {
+                const total = project.items.length;
+                const completed = project.items.filter(item => item.completed).length;
+                const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+                
+                return `
+                    <div class="project-card ${project.id === currentProjectId ? 'active' : ''}" data-id="${project.id}">
+                        <button class="project-delete" data-id="${project.id}">×</button>
+                        <div class="project-name">${project.name}</div>
+                        <div class="project-stats">
+                            재료 ${total}개 · 완료 ${completed}개 (${percentage}%)
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            grid.querySelectorAll('.project-card').forEach(card => {
+                card.onclick = function(e) {
+                    if (!e.target.classList.contains('project-delete')) {
+                        selectProject(parseInt(this.dataset.id));
+                    }
+                };
+            });
+
+            grid.querySelectorAll('.project-delete').forEach(btn => {
+                btn.onclick = function(e) {
+                    e.stopPropagation();
+                    deleteProject(parseInt(this.dataset.id));
+                };
+            });
+        }
+
+        function selectProject(projectId) {
+            currentProjectId = projectId;
+            document.getElementById('projectContent').style.display = 'block';
+            renderProjects();
+            renderItems();
+        }
+
+        let pendingDeleteProjectId = null;
+
+        // 커스텀 confirm 모달
+        function showConfirm(message, onConfirm) {
+            document.getElementById('confirmMessage').textContent = message;
+            document.getElementById('confirmModal').classList.add('active');
+            
+            document.getElementById('confirmOkBtn').onclick = function() {
+                document.getElementById('confirmModal').classList.remove('active');
+                onConfirm();
+            };
+            
+            document.getElementById('confirmCancelBtn').onclick = function() {
+                document.getElementById('confirmModal').classList.remove('active');
+            };
+            
+            document.getElementById('confirmModal').onclick = function(e) {
+                if (e.target.id === 'confirmModal') {
+                    this.classList.remove('active');
+                }
+            };
+        }
+
+        function deleteProject(projectId) {
+            const project = projects.find(p => p.id === projectId);
+            if (!project) return;
+
+            showConfirm(`"${project.name}" 프로젝트를 삭제하시겠습니까?`, function() {
+                projects = projects.filter(p => p.id !== projectId);
+                if (currentProjectId === projectId) {
+                    currentProjectId = null;
+                    document.getElementById('projectContent').style.display = 'none';
+                }
+                saveProjects();
+                renderProjects();
+                showNotification('프로젝트가 삭제되었습니다');
+            });
+        }
+
+        function getCurrentProject() {
+            return projects.find(p => p.id === currentProjectId);
+        }
+
+        function calculateStacks(quantity, stackSize) {
+            const fullStacks = Math.floor(quantity / stackSize);
+            const remaining = quantity % stackSize;
+            return { fullStacks, remaining, stackSize };
+        }
+
+        function searchItem(query) {
+            query = query.toLowerCase().trim();
+            if (!query) return [];
+
+            const results = [];
+            for (const [engName, data] of Object.entries(minecraftItems)) {
+                const koName = data.ko.toLowerCase();
+                if (engName.includes(query) || koName.includes(query)) {
+                    results.push({ eng: engName, ko: data.ko, stack: data.stack });
+                }
+            }
+            return results.slice(0, 10);
+        }
+
+        const itemNameInput = document.getElementById('itemName');
+        const itemQuantityInput = document.getElementById('itemQuantity');
+        const autocomplete = document.getElementById('autocomplete');
+
+        itemNameInput.oninput = function() {
+            const results = searchItem(this.value);
+            if (results.length > 0) {
+                autocomplete.innerHTML = results.map(item => `
+                    <div class="autocomplete-item" data-eng="${item.eng}">
+                        <div><div class="autocomplete-korean">${item.ko}</div><div class="autocomplete-english">${item.eng}</div></div>
+                        <div class="autocomplete-stack">×${item.stack}</div>
+                    </div>
+                `).join('');
+                autocomplete.classList.add('active');
+
+                autocomplete.querySelectorAll('.autocomplete-item').forEach(item => {
+                    item.onclick = function() {
+                        const engName = this.dataset.eng;
+                        const itemData = minecraftItems[engName];
+                        itemNameInput.value = itemData.ko;
+                        itemNameInput.dataset.stackSize = itemData.stack;
+                        autocomplete.classList.remove('active');
+                    };
+                });
+            } else {
+                autocomplete.classList.remove('active');
+            }
+        };
+
+        document.onclick = (e) => {
+            if (!e.target.closest('.input-row')) {
+                autocomplete.classList.remove('active');
+            }
+        };
+
+        function addItem() {
+            const project = getCurrentProject();
+            if (!project) {
+                showNotification('프로젝트를 먼저 선택하세요');
+                return;
+            }
+
+            const name = itemNameInput.value.trim();
+            const quantity = parseInt(itemQuantityInput.value) || 64;
+            const stackSize = parseInt(itemNameInput.dataset.stackSize) || 64;
+
+            if (!name) {
+                showNotification('재료 이름을 입력하세요');
+                return;
+            }
+
+            project.items.push({
+                name: name,
+                quantity: quantity,
+                stackSize: stackSize,
+                completed: false,
+                id: Date.now()
+            });
+
+            itemNameInput.value = '';
+            itemQuantityInput.value = '64';
+            delete itemNameInput.dataset.stackSize;
+            
+            saveProjects();
+            renderProjects();
+            renderItems();
+            showNotification('재료가 추가되었습니다');
+        }
+
+        document.getElementById('addBtn').onclick = addItem;
+        itemNameInput.onkeypress = (e) => { if (e.key === 'Enter') addItem(); };
+        itemQuantityInput.onkeypress = (e) => { if (e.key === 'Enter') addItem(); };
+
+        // 전역 함수로 등록 - confirm 없이 바로 삭제
+        window.toggleItemComplete = function(itemId) {
+            const project = getCurrentProject();
+            if (!project) return;
+            const idx = project.items.findIndex(i => i.id === itemId);
+            if (idx !== -1) {
+                project.items[idx].completed = !project.items[idx].completed;
+                saveProjects();
+                renderProjects();
+                renderItems();
+                if (project.items[idx].completed) {
+                    showNotification(project.items[idx].name + ' 완료');
+                }
+            }
+        };
+
+        window.editItemById = function(itemId) {
+            const project = getCurrentProject();
+            if (!project) return;
+            const idx = project.items.findIndex(i => i.id === itemId);
+            if (idx !== -1) {
+                openEditModal(idx);
+            }
+        };
+
+        window.deleteItemById = function(itemId) {
+            const project = getCurrentProject();
+            if (!project) return;
+            const idx = project.items.findIndex(i => i.id === itemId);
+            if (idx !== -1) {
+                project.items.splice(idx, 1);
+                saveProjects();
+                renderProjects();
+                renderItems();
+                showNotification('삭제되었습니다');
+            }
+        };
+
+        function renderItems() {
+            const project = getCurrentProject();
+            if (!project) return;
+
+            const grid = document.getElementById('itemsGrid');
+            const items = project.items;
+            
+            if (items.length === 0) {
+                grid.innerHTML = '<div class="empty-state"><div class="empty-state-text">재료를 추가해보세요</div></div>';
+                updateStats();
+                return;
+            }
+
+            grid.innerHTML = items.map((item, index) => {
+                const stacks = calculateStacks(item.quantity, item.stackSize);
+                let stackDisplay = '';
+                
+                if (stacks.fullStacks > 0 && stacks.remaining > 0) {
+                    stackDisplay = `<div class="stack-badge">${stacks.fullStacks}세트</div><div class="stack-badge">${stacks.remaining}개</div>`;
+                } else if (stacks.fullStacks > 0) {
+                    stackDisplay = `<div class="stack-badge">${stacks.fullStacks}세트</div>`;
+                } else {
+                    stackDisplay = `<div class="stack-badge">${stacks.remaining}개</div>`;
+                }
+
+                return `
+                    <div class="item-card ${item.completed ? 'completed' : ''}">
+                        <div class="item-header">
+                            <input type="checkbox" ${item.completed ? 'checked' : ''} onclick="toggleItemComplete(${item.id})">
+                            <div class="item-name">${item.name}</div>
+                        </div>
+                        <div class="stack-info">
+                            <div class="stack-label">인벤토리 (×${item.stackSize})</div>
+                            <div class="stack-display">${stackDisplay}</div>
+                        </div>
+                        <div class="quantity-display">총 <span class="quantity-value">${item.quantity}개</span></div>
+                        <div class="item-actions">
+                            <button class="btn-small btn-edit" onclick="editItemById(${item.id})">수정</button>
+                            <button class="btn-small btn-delete-item" onclick="deleteItemById(${item.id})">삭제</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            updateStats();
+        }
+
+        function updateStats() {
+            const project = getCurrentProject();
+            if (!project) return;
+
+            const total = project.items.length;
+            const completed = project.items.filter(item => item.completed).length;
+            const remaining = total - completed;
+            const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+            document.getElementById('totalItems').textContent = total;
+            document.getElementById('completedItems').textContent = completed;
+            document.getElementById('remainingItems').textContent = remaining;
+            
+            const progressFill = document.getElementById('progressFill');
+            progressFill.style.width = percentage + '%';
+            progressFill.textContent = percentage + '%';
+        }
+
+        document.getElementById('clearBtn').onclick = function() {
+            const project = getCurrentProject();
+            if (!project || project.items.length === 0) {
+                showNotification('삭제할 항목이 없습니다');
+                return;
+            }
+            project.items = [];
+            saveProjects();
+            renderProjects();
+            renderItems();
+            showNotification('모두 삭제되었습니다');
+        };
+
+        function openEditModal(index) {
+            const project = getCurrentProject();
+            editingIndex = index;
+            document.getElementById('editItemName').value = project.items[index].name;
+            document.getElementById('editItemQuantity').value = project.items[index].quantity;
+            document.getElementById('editModal').classList.add('active');
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').classList.remove('active');
+            editingIndex = -1;
+        }
+
+        document.getElementById('cancelEditBtn').onclick = closeEditModal;
+        document.getElementById('saveEditBtn').onclick = function() {
+            const project = getCurrentProject();
+            const quantity = parseInt(document.getElementById('editItemQuantity').value) || 1;
+            project.items[editingIndex].quantity = quantity;
+            saveProjects();
+            renderProjects();
+            renderItems();
+            closeEditModal();
+            showNotification('수정되었습니다');
+        };
+
+        document.getElementById('editModal').onclick = function(e) {
+            if (e.target.id === 'editModal') closeEditModal();
+        };
+
+        document.getElementById('shareBtn').onclick = async function() {
+            const project = getCurrentProject();
+            if (!project || project.items.length === 0) {
+                showNotification('공유할 항목이 없습니다');
+                return;
+            }
+
+            const shareText = `도피처 서버 - ${project.name}\n\n` +
+                project.items.map(item => {
+                    const stacks = calculateStacks(item.quantity, item.stackSize);
+                    let stackText = '';
+                    if (stacks.fullStacks > 0 && stacks.remaining > 0) {
+                        stackText = ` (${stacks.fullStacks}세트 ${stacks.remaining}개)`;
+                    } else if (stacks.fullStacks > 0) {
+                        stackText = ` (${stacks.fullStacks}세트)`;
+                    } else {
+                        stackText = ` (${stacks.remaining}개)`;
+                    }
+                    return `${item.completed ? 'V' : 'O'} ${item.name} ${item.quantity}개${stackText}`;
+                }).join('\n') +
+                `\n\n진행률: ${project.items.filter(i => i.completed).length}/${project.items.length} (${Math.round((project.items.filter(i => i.completed).length / project.items.length) * 100)}%)`;
+
+            if (navigator.share) {
+                try {
+                    await navigator.share({ title: `도피처 - ${project.name}`, text: shareText });
+                    showNotification('공유 완료');
+                } catch (err) {
+                    if (err.name !== 'AbortError') {
+                        navigator.clipboard.writeText(shareText).then(() => {
+                            showNotification('클립보드에 복사됨');
+                        });
+                    }
+                }
+            } else {
+                navigator.clipboard.writeText(shareText).then(() => {
+                    showNotification('클립보드에 복사됨');
+                });
+            }
+        };
+
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => {
+                notification.style.animation = 'slideIn 0.3s ease reverse';
+                setTimeout(() => notification.remove(), 300);
+            }, 2500);
+        }
+
+        startSync();
+        loadProjects();
+    </script>
+</body>
+</html>
