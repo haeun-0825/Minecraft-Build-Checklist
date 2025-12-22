@@ -825,15 +825,17 @@
     </div>
 
     <script>
-        // 1. 본인의 Firebase 설정값을 여기에 꼭 넣으세요!
+        // 1. Firebase 설정 및 초기화
         const firebaseConfig = {
             apiKey: "AIzaSyDnt1KYr_JSs-ua3FYtWr5CyvHBenLVXXU",
             authDomain: "minecraft-build-checklist.firebaseapp.com",
+            // ★ Realtime Database 주소를 여기에 넣으세요
             databaseURL: "https://minecraft-build-checklist-default-rtdb.asia-southeast1.firebasedatabase.app",
             projectId: "minecraft-build-checklist",
             storageBucket: "minecraft-build-checklist.firebasestorage.app",
             messagingSenderId: "749500903128",
-            appId: "1:749500903128:web:8eae82f31078ae542b31ad"
+            appId: "1:749500903128:web:8eae82f31078ae542b31ad",
+            measurementId: "G-PZVVPCRL4S"
         };
 
         firebase.initializeApp(firebaseConfig);
@@ -1175,20 +1177,14 @@
             }
         };
 
+        // 2. 서버에서 데이터 불러오기 (기존 함수 교체)
         function loadProjects() {
-            // 서버(Firebase)에서 데이터가 바뀔 때마다 실행됨
             db.ref('projects').on('value', (snapshot) => {
-                const serverData = snapshot.val();
-                if (serverData) {
-                    // 서버 데이터를 배열 형태로 변환
-                    projects = Object.keys(serverData).map(key => ({
-                        id: key,
-                        ...serverData[key],
-                        items: serverData[key].items ? Object.values(serverData[key].items) : []
-                    }));
-            
+                const data = snapshot.val();
+                if (data) {
+                    projects = data;
                     renderProjects();
-                    if (currentProjectId) {
+                    if (currentProjectId !== null) {
                         renderItems();
                     }
                     updateSyncStatus(true);
@@ -1196,12 +1192,11 @@
             });
         }
 
+        // 3. 서버에 데이터 저장하기 (기존 함수 교체)
         function saveProjects() {
-            // 현재 모든 프로젝트 데이터를 서버에 통째로 덮어쓰기
-            // (더 정교한 수정을 원하시면 push나 update를 쓰지만, 
-            // 기존 로직 유지를 위해 전체 저장 방식을 사용합니다)
-            db.ref('projects').set(projects);
-            updateSyncStatus(true);
+            db.ref('projects').set(projects)
+              .then(() => updateSyncStatus(true))
+              .catch((err) => console.error("저장 실패:", err));
         }
 
         function createProject() {
