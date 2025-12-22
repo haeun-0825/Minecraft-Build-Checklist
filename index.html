@@ -1177,14 +1177,21 @@
             }
         };
 
-        // 2. 서버에서 데이터 불러오기 (기존 함수 교체)
+        // 2. 서버에서 데이터 실시간으로 가져오기 (이 코드로 교체)
         function loadProjects() {
+            // .on('value', ...)를 사용해야 새로고침 후에도 서버 데이터를 즉시 가져옵니다.
             db.ref('projects').on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    projects = data;
+                const serverData = snapshot.val();
+                if (serverData) {
+                    // 서버 데이터를 기존 projects 배열 구조에 맞게 변환
+                    projects = Object.keys(serverData).map(key => ({
+                        ...serverData[key],
+                        // Firebase는 빈 배열을 저장하지 않으므로 체크 필수
+                        items: serverData[key].items ? Object.values(serverData[key].items) : []
+                    }));
+            
                     renderProjects();
-                    if (currentProjectId !== null) {
+                    if (currentProjectId) {
                         renderItems();
                     }
                     updateSyncStatus(true);
@@ -1192,11 +1199,16 @@
             });
         }
 
-        // 3. 서버에 데이터 저장하기 (기존 함수 교체)
+        // 3. 서버에 데이터 저장하기 (이 코드로 교체)
         function saveProjects() {
+            // 로컬 스토리지 대신 Firebase 서버에 덮어쓰기
             db.ref('projects').set(projects)
-              .then(() => updateSyncStatus(true))
-              .catch((err) => console.error("저장 실패:", err));
+                .then(() => {
+                    updateSyncStatus(true);
+                })
+                .catch((error) => {
+                    console.error("서버 저장 실패:", error);
+                });
         }
 
         function createProject() {
