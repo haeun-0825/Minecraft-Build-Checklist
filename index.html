@@ -719,10 +719,6 @@
         <header>
             <h1>도피처 서버 건축 관리</h1>
             <p class="subtitle">친구들과 함께 건축 재료를 관리하세요</p>
-            <div class="sync-status" id="syncStatus">
-                <span class="sync-dot"></span>
-                <span id="syncText">동기화 준비중...</span>
-            </div>
         </header>
 
         <div class="project-section">
@@ -735,17 +731,6 @@
                 <div class="empty-state">
                     <div class="empty-state-text">첫 프로젝트를 만들어보세요</div>
                 </div>
-            </div>
-            
-            <div class="share-box" id="shareBox" style="display: none;">
-                <div class="share-label">친구들과 공유하기 (방 ID)</div>
-                <div class="share-url">
-                    <input type="text" id="shareUrl" readonly placeholder="클릭하여 방 변경">
-                    <button class="btn btn-secondary" id="copyUrlBtn">복사</button>
-                </div>
-                <p class="share-hint">
-                    이 방 ID를 친구들에게 공유하세요. 친구가 같은 ID로 접속하면 실시간으로 함께 작업할 수 있습니다.
-                </p>
             </div>
         </div>
 
@@ -1124,14 +1109,12 @@
                 localStorage.setItem('dopicho_current_room', newRoomId.trim());
                 roomId = newRoomId.trim();
                 loadProjects();
-                updateShareUrl();
                 showNotification('방이 변경되었습니다');
             }
         }
 
         function startSync() {
             roomId = getRoomId();
-            updateShareUrl();
             
             window.addEventListener('storage', (e) => {
                 if (e.key === 'dopicho_' + roomId) {
@@ -1159,23 +1142,6 @@
                 text.textContent = '동기화 중...';
             }
         }
-
-        function updateShareUrl() {
-            document.getElementById('shareUrl').value = roomId;
-            document.getElementById('shareBox').style.display = 'block';
-        }
-        
-        document.getElementById('copyUrlBtn').onclick = function() {
-            navigator.clipboard.writeText(roomId);
-            showNotification('방 ID가 복사되었습니다');
-        };
-        
-        document.getElementById('shareUrl').onclick = function() {
-            const newRoomId = prompt('접속할 방 ID를 입력하세요 (취소하면 현재 방 유지):', roomId);
-            if (newRoomId && newRoomId !== roomId) {
-                changeRoom(newRoomId);
-            }
-        };
 
         // 2. 서버에서 데이터 실시간으로 가져오기 (이 코드로 교체)
         function loadProjects() {
