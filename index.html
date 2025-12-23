@@ -442,6 +442,19 @@
             font-weight: 700;
         }
 
+        .item-image {
+            width: 32px;
+            height: 32px;
+            flex-shrink: 0;
+            object-fit: contain;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+            background: rgba(139, 195, 74, 0.1);
+            border-radius: 3px;
+            padding: 2px;
+        }
+
         .item-name {
             flex: 1;
             font-size: 1em;
@@ -1498,6 +1511,9 @@
                     <div class="item-card ${item.completed ? 'completed' : ''}">
                         <div class="item-header">
                             <input type="checkbox" ${item.completed ? 'checked' : ''} onclick="toggleItemComplete(${item.id})">
+                            <img src="https://minecraft.wiki/images/Invicon_${encodeURIComponent(item.name.replace(/ /g, '_'))}.png" 
+                                 class="item-image" 
+                                 onerror="this.src='https://via.placeholder.com/32/8bc34a/ffffff?text=📦'; this.style.imageRendering='auto';">
                             <div class="item-name">${item.name}</div>
                         </div>
                         <div class="stack-info">
