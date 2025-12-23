@@ -830,16 +830,22 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         
-        // 마인크래프트 1.12 전체 아이템 (500개 이상)
+        // 마인크래프트 1.21 전체 아이템
         const minecraftItems = {
-            // 원목
+            // 원목 (1.19+ 맹그로브, 체리 추가)
             'oak_log': { ko: '참나무 원목', stack: 64 }, 'spruce_log': { ko: '가문비나무 원목', stack: 64 },
             'birch_log': { ko: '자작나무 원목', stack: 64 }, 'jungle_log': { ko: '정글 나무 원목', stack: 64 },
             'acacia_log': { ko: '아카시아나무 원목', stack: 64 }, 'dark_oak_log': { ko: '짙은 참나무 원목', stack: 64 },
+            'mangrove_log': { ko: '맹그로브 나무 원목', stack: 64 }, 'cherry_log': { ko: '벚나무 원목', stack: 64 },
+            'crimson_stem': { ko: '진홍빛 줄기', stack: 64 }, 'warped_stem': { ko: '뒤틀린 줄기', stack: 64 },
+            'bamboo_block': { ko: '대나무 블록', stack: 64 },
             // 판자
             'oak_planks': { ko: '참나무 판자', stack: 64 }, 'spruce_planks': { ko: '가문비나무 판자', stack: 64 },
             'birch_planks': { ko: '자작나무 판자', stack: 64 }, 'jungle_planks': { ko: '정글 나무 판자', stack: 64 },
             'acacia_planks': { ko: '아카시아나무 판자', stack: 64 }, 'dark_oak_planks': { ko: '짙은 참나무 판자', stack: 64 },
+            'mangrove_planks': { ko: '맹그로브 나무 판자', stack: 64 }, 'cherry_planks': { ko: '벚나무 판자', stack: 64 },
+            'crimson_planks': { ko: '진홍빛 판자', stack: 64 }, 'warped_planks': { ko: '뒤틀린 판자', stack: 64 },
+            'bamboo_planks': { ko: '대나무 판자', stack: 64 }, 'bamboo_mosaic': { ko: '대나무 모자이크', stack: 64 },
             // 돌
             'stone': { ko: '돌', stack: 64 }, 'granite': { ko: '화강암', stack: 64 }, 'polished_granite': { ko: '윤나는 화강암', stack: 64 },
             'diorite': { ko: '섬록암', stack: 64 }, 'polished_diorite': { ko: '윤나는 섬록암', stack: 64 },
@@ -1088,7 +1094,39 @@
             'coal_ore': { ko: '석탄 광석', stack: 64 }, 'iron_ore': { ko: '철 광석', stack: 64 },
             'gold_ore': { ko: '금 광석', stack: 64 }, 'diamond_ore': { ko: '다이아몬드 광석', stack: 64 },
             'emerald_ore': { ko: '에메랄드 광석', stack: 64 }, 'lapis_ore': { ko: '청금석 광석', stack: 64 },
-            'redstone_ore': { ko: '레드스톤 광석', stack: 64 }, 'nether_quartz_ore': { ko: '네더 석영 광석', stack: 64 }
+            'redstone_ore': { ko: '레드스톤 광석', stack: 64 }, 'nether_quartz_ore': { ko: '네더 석영 광석', stack: 64 },
+            'copper_ore': { ko: '구리 광석', stack: 64 }, 'deepslate_copper_ore': { ko: '깊은 슬레이트 구리 광석', stack: 64 },
+            // 1.21 신규: Tuff 계열 (응회암)
+            'tuff': { ko: '응회암', stack: 64 }, 'polished_tuff': { ko: '윤나는 응회암', stack: 64 },
+            'tuff_stairs': { ko: '응회암 계단', stack: 64 }, 'tuff_slab': { ko: '응회암 반 블록', stack: 64 },
+            'tuff_wall': { ko: '응회암 담장', stack: 64 }, 'chiseled_tuff': { ko: '조각된 응회암', stack: 64 },
+            'polished_tuff_stairs': { ko: '윤나는 응회암 계단', stack: 64 }, 'polished_tuff_slab': { ko: '윤나는 응회암 반 블록', stack: 64 },
+            'polished_tuff_wall': { ko: '윤나는 응회암 담장', stack: 64 },
+            'tuff_bricks': { ko: '응회암 벽돌', stack: 64 }, 'tuff_brick_stairs': { ko: '응회암 벽돌 계단', stack: 64 },
+            'tuff_brick_slab': { ko: '응회암 벽돌 반 블록', stack: 64 }, 'tuff_brick_wall': { ko: '응회암 벽돌 담장', stack: 64 },
+            'chiseled_tuff_bricks': { ko: '조각된 응회암 벽돌', stack: 64 },
+            // 1.21 신규: Copper 계열 (구리)
+            'copper_block': { ko: '구리 블록', stack: 64 }, 'exposed_copper': { ko: '약간 녹슨 구리', stack: 64 },
+            'weathered_copper': { ko: '녹슨 구리', stack: 64 }, 'oxidized_copper': { ko: '산화된 구리', stack: 64 },
+            'cut_copper': { ko: '잘린 구리', stack: 64 }, 'exposed_cut_copper': { ko: '약간 녹슨 잘린 구리', stack: 64 },
+            'weathered_cut_copper': { ko: '녹슨 잘린 구리', stack: 64 }, 'oxidized_cut_copper': { ko: '산화된 잘린 구리', stack: 64 },
+            'cut_copper_stairs': { ko: '잘린 구리 계단', stack: 64 }, 'cut_copper_slab': { ko: '잘린 구리 반 블록', stack: 64 },
+            'copper_door': { ko: '구리 문', stack: 64 }, 'exposed_copper_door': { ko: '약간 녹슨 구리 문', stack: 64 },
+            'weathered_copper_door': { ko: '녹슨 구리 문', stack: 64 }, 'oxidized_copper_door': { ko: '산화된 구리 문', stack: 64 },
+            'copper_trapdoor': { ko: '구리 다락문', stack: 64 }, 'exposed_copper_trapdoor': { ko: '약간 녹슨 구리 다락문', stack: 64 },
+            'weathered_copper_trapdoor': { ko: '녹슨 구리 다락문', stack: 64 }, 'oxidized_copper_trapdoor': { ko: '산화된 구리 다락문', stack: 64 },
+            'copper_grate': { ko: '구리 격자', stack: 64 }, 'exposed_copper_grate': { ko: '약간 녹슨 구리 격자', stack: 64 },
+            'weathered_copper_grate': { ko: '녹슨 구리 격자', stack: 64 }, 'oxidized_copper_grate': { ko: '산화된 구리 격자', stack: 64 },
+            'copper_bulb': { ko: '구리 전구', stack: 64 }, 'exposed_copper_bulb': { ko: '약간 녹슨 구리 전구', stack: 64 },
+            'weathered_copper_bulb': { ko: '녹슨 구리 전구', stack: 64 }, 'oxidized_copper_bulb': { ko: '산화된 구리 전구', stack: 64 },
+            'chiseled_copper': { ko: '조각된 구리', stack: 64 }, 'exposed_chiseled_copper': { ko: '약간 녹슨 조각된 구리', stack: 64 },
+            'weathered_chiseled_copper': { ko: '녹슨 조각된 구리', stack: 64 }, 'oxidized_chiseled_copper': { ko: '산화된 조각된 구리', stack: 64 },
+            // 1.21 신규: 기능성 블록
+            'crafter': { ko: '제작기', stack: 64 }, 'trial_spawner': { ko: '시련 생성기', stack: 64 },
+            'vault': { ko: '보관함', stack: 64 }, 'heavy_core': { ko: '무거운 핵', stack: 64 },
+            // 1.21 신규: 무기/도구
+            'mace': { ko: '철퇴', stack: 1 }, 'breeze_rod': { ko: '산들바람 막대', stack: 64 },
+            'wind_charge': { ko: '바람 탄환', stack: 64 }
         };
 
         let projects = [];
