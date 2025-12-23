@@ -1494,28 +1494,10 @@
                     stackDisplay = `<div class="stack-badge">${stacks.remaining}개</div>`;
                 }
 
-                // 간단한 이미지 매핑
-                const imgMap = {
-                    '참나무 원목': 'oak_log', '자작나무 원목': 'birch_log', '가문비나무 원목': 'spruce_log',
-                    '참나무 판자': 'oak_planks', '자작나무 판자': 'birch_planks', '가문비나무 판자': 'spruce_planks',
-                    '돌': 'stone', '조약돌': 'cobblestone', '화강암': 'granite', '안산암': 'andesite', '섬록암': 'diorite',
-                    '석재 벽돌': 'stone_bricks', '매끄러운 돌': 'smooth_stone',
-                    '흙': 'dirt', '잔디 블록': 'grass_block', '모래': 'sand', '자갈': 'gravel', '점토': 'clay',
-                    '유리': 'glass', '유리판': 'glass_pane',
-                    '석탄': 'coal', '철 주괴': 'iron_ingot', '금 주괴': 'gold_ingot', '다이아몬드': 'diamond',
-                    '에메랄드': 'emerald', '레드스톤': 'redstone', '청금석': 'lapis_lazuli',
-                    '상자': 'chest', '화로': 'furnace', '작업대': 'crafting_table', '햇불': 'torch',
-                    '책장': 'bookshelf', '사다리': 'ladder', '문': 'oak_door', '울타리': 'oak_fence'
-                };
-                
-                const imgKey = imgMap[item.name] || '';
-                const imgUrl = imgKey ? `https://minecraft.wiki/images/Invicon_${imgKey.charAt(0).toUpperCase() + imgKey.slice(1).replace(/_(.)/g, (m, c) => '_' + c.toUpperCase())}.png` : '';
-
                 return `
                     <div class="item-card ${item.completed ? 'completed' : ''}">
                         <div class="item-header">
                             <input type="checkbox" ${item.completed ? 'checked' : ''} onclick="toggleItemComplete(${item.id})">
-                            ${imgUrl ? `<img src="${imgUrl}" class="item-image" onerror="this.style.display='none';">` : ''}
                             <div class="item-name">${item.name}</div>
                         </div>
                         <div class="stack-info">
