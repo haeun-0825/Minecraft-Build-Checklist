@@ -1379,6 +1379,7 @@
                         const itemData = minecraftItems[engName];
                         itemNameInput.value = itemData.ko;
                         itemNameInput.dataset.stackSize = itemData.stack;
+                        itemNameInput.dataset.engName = engName; // 영어 이름도 저장
                         autocomplete.classList.remove('active');
                     };
                 });
@@ -1403,6 +1404,7 @@
             const name = itemNameInput.value.trim();
             const quantity = parseInt(itemQuantityInput.value) || 64;
             const stackSize = parseInt(itemNameInput.dataset.stackSize) || 64;
+            const engName = itemNameInput.dataset.engName || ''; // 영어 이름 가져오기
 
             if (!name) {
                 showNotification('재료 이름을 입력하세요');
@@ -1411,6 +1413,7 @@
 
             project.items.push({
                 name: name,
+                engName: engName, // 영어 이름 저장
                 quantity: quantity,
                 stackSize: stackSize,
                 completed: false,
@@ -1420,6 +1423,7 @@
             itemNameInput.value = '';
             itemQuantityInput.value = '64';
             delete itemNameInput.dataset.stackSize;
+            delete itemNameInput.dataset.engName; // 영어 이름도 초기화
             
             saveProjects();
             renderProjects();
@@ -1498,7 +1502,7 @@
                     <div class="item-card ${item.completed ? 'completed' : ''}">
                         <div class="item-header">
                             <input type="checkbox" ${item.completed ? 'checked' : ''} onclick="toggleItemComplete(${item.id})">
-                            <div class="item-name">${item.name}</div>
+                            <div class="item-name">${item.name}${item.engName ? ` (${item.engName})` : ''}</div>
                         </div>
                         <div class="stack-info">
                             <div class="stack-label">인벤토리 (×${item.stackSize})</div>
@@ -1594,7 +1598,7 @@
                     } else {
                         stackText = ` (${stacks.remaining}개)`;
                     }
-                    return `${item.completed ? 'V' : 'O'} ${item.name} ${item.quantity}개${stackText}`;
+                    return `${item.completed ? 'V' : 'O'} ${item.name}${item.engName ? ` (${item.engName})` : ''} ${item.quantity}개${stackText}`;
                 }).join('\n') +
                 `\n\n진행률: ${project.items.filter(i => i.completed).length}/${project.items.length} (${Math.round((project.items.filter(i => i.completed).length / project.items.length) * 100)}%)`;
 
